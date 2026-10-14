@@ -1,0 +1,23 @@
+name: PlexDeathCoords
+version: '${version}'
+main: plex.deathcoords.PlexDeathCoords
+api-version: '1.21'
+description: Records each player's most recent death location.
+commands:
+  lastdeath:
+    description: Show or clear your most recent death location.
+    aliases: [deathcoords]
+    usage: /<command> [clear]
+  plexdeathcoords:
+    description: Reload PlexDeathCoords configuration.
+    usage: /<command> reload
+permissions:
+  plexdeathcoords.use:
+    description: View your most recent death location.
+    default: true
+  plexdeathcoords.clear:
+    description: Clear your saved death location.
+    default: true
+  plexdeathcoords.admin:
+    description: Reload PlexDeathCoords configuration.
+    default: op
