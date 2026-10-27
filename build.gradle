@@ -1,0 +1,60 @@
+plugins {
+    id 'java'
+}
+
+group = 'plex.deathcoords'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+    maven {
+        url = 'https://repo.papermc.io/repository/maven-public/'
+        content {
+            includeGroup 'io.papermc.paper'
+            includeGroup 'com.mojang'
+            includeGroup 'net.md-5'
+        }
+    }
+}
+
+dependencies {
+    compileOnly 'io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT'
+    testImplementation 'io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT'
+    testImplementation platform('org.junit:junit-bom:5.12.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+    options.compilerArgs += ['-Xlint:all', '-Werror']
+}
+
+def pluginVersion = project.version.toString()
+
+processResources {
+    inputs.property 'version', pluginVersion
+    filesMatching('plugin.yml') {
+        expand(version: pluginVersion)
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    from('LICENSE') {
+        into 'META-INF'
+    }
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}

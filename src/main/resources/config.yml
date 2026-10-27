@@ -1,0 +1,25 @@
+# Coordinate precision: 0 to 6 decimal places, rounded to the nearest value.
+coordinate-precision: 0
+show-world: true
+show-time: true
+allow-clear: true
+
+# MiniMessage formatting. Dynamic values are inserted as plain text.
+messages:
+  last-death: '<gray>Last death: <white><x>, <y>, <z></white><world_part><time_part></gray>'
+  world: ' in <white><world></white>'
+  time: ' <dark_gray>(<ago> ago)</dark_gray>'
+  seconds: '<value>s'
+  minutes: '<value>m'
+  hours: '<value>h'
+  days: '<value>d'
+  no-death: '<gray>You have no saved death location.</gray>'
+  cleared: '<gray>Your saved death location has been cleared.</gray>'
+  clear-disabled: '<red>Clearing death locations is disabled.</red>'
+  no-permission: '<red>You do not have permission to use this command.</red>'
+  players-only: '<red>Only players can use this command.</red>'
+  usage: '<gray>Usage: /<command> [clear]</gray>'
+  admin-usage: '<gray>Usage: /<command> reload</gray>'
+  reloaded: '<gray>Configuration reloaded.</gray>'
+  reload-in-progress: '<gray>Configuration reload is already in progress.</gray>'
+  reload-failed: '<red>Configuration could not be reloaded. Check the server log.</red>'
