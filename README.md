@@ -7,6 +7,12 @@ Maintained by [ApplexDev](https://github.com/ApplexDev) / Plex Studios.
 
 ## Features
 
+Version 1.1.0 adds clickable chat coordinates (click to copy), optional respawn reminders,
+and a `/lastdeath compass` command. Compass targets are limited to the same normal
+Overworld: vanilla compasses do not reliably point to arbitrary locations in other
+dimensions. All three features can be individually configured.
+
+
 - One saved death per player UUID, across worlds and dimensions.
 - World UUID/name, exact coordinates, and death timestamp stored in `deaths.yml`.
 - Commands to view or clear a location, with permission checks and tab completion.
@@ -26,7 +32,7 @@ Maintained by [ApplexDev](https://github.com/ApplexDev) / Plex Studios.
 
 ## Installation
 
-1. Build `PlexDeathCoords-1.0.0.jar` from source, or download it from [GitHub Releases](https://github.com/PlexStudios/PlexDeathCoords/releases) when a release is available.
+1. Build `PlexDeathCoords-1.1.0.jar` from source, or download it from [GitHub Releases](https://github.com/PlexStudios/PlexDeathCoords/releases) when a release is available.
 2. Place the JAR in your Paper server's `plugins` directory.
 3. Start or restart the server.
 4. Edit `plugins/PlexDeathCoords/config.yml` if needed and run `/plexdeathcoords reload`.
@@ -40,6 +46,7 @@ death locations are not imported. Use a full server restart when replacing the J
 | --- | --- | --- |
 | `/lastdeath` | `plexdeathcoords.use` | Everyone |
 | `/deathcoords` | `plexdeathcoords.use` | Everyone |
+| `/lastdeath compass` | `plexdeathcoords.use` | Everyone |
 | `/lastdeath clear` | `plexdeathcoords.use` and `plexdeathcoords.clear` | Everyone |
 | `/deathcoords clear` | `plexdeathcoords.use` and `plexdeathcoords.clear` | Everyone |
 | `/plexdeathcoords reload` | `plexdeathcoords.admin` | Operators |
@@ -58,6 +65,9 @@ coordinate-precision: 0
 show-world: true
 show-time: true
 allow-clear: true
+clickable-coordinates: true
+respawn-reminder: false
+allow-compass: true
 
 messages:
   last-death: '<gray>Last death: <white><x>, <y>, <z></white><world_part><time_part></gray>'
