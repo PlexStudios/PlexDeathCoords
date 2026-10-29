@@ -3,9 +3,17 @@ coordinate-precision: 0
 show-world: true
 show-time: true
 allow-clear: true
+clickable-coordinates: true
+respawn-reminder: false
+allow-compass: true
 
 # MiniMessage formatting. Dynamic values are inserted as plain text.
 messages:
+  copy-hover: '<yellow>Click to copy coordinates</yellow>'
+  respawn-reminder: '<gray>Death location: <location></gray>'
+  compass-set: '<green>Compass now points to your last death location.</green>'
+  compass-world: '<red>Compass tracking works only in the same Overworld as your death.</red>'
+  compass-disabled: '<red>Compass tracking is disabled.</red>'
   last-death: '<gray>Last death: <white><x>, <y>, <z></white><world_part><time_part></gray>'
   world: ' in <white><world></white>'
   time: ' <dark_gray>(<ago> ago)</dark_gray>'
