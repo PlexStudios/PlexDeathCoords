@@ -1,6 +1,8 @@
 package plex.deathcoords;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.ParsingException;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -27,14 +29,21 @@ final class Settings {
     private final boolean showWorld;
     private final boolean showTime;
     private final boolean allowClear;
+    private final boolean clickableCoordinates;
+    private final boolean respawnReminder;
+    private final boolean allowCompass;
     private final Map<String, String> messages;
 
     private Settings(int precision, boolean showWorld, boolean showTime, boolean allowClear,
+                     boolean clickableCoordinates, boolean respawnReminder, boolean allowCompass,
                      Map<String, String> messages) {
         this.precision = precision;
         this.showWorld = showWorld;
         this.showTime = showTime;
         this.allowClear = allowClear;
+        this.clickableCoordinates = clickableCoordinates;
+        this.respawnReminder = respawnReminder;
+        this.allowCompass = allowCompass;
         this.messages = Map.copyOf(messages);
     }
 
@@ -67,6 +76,9 @@ final class Settings {
         boolean showWorld = booleanSetting(config, "show-world");
         boolean showTime = booleanSetting(config, "show-time");
         boolean allowClear = booleanSetting(config, "allow-clear");
+        boolean clickableCoordinates = booleanSetting(config, "clickable-coordinates");
+        boolean respawnReminder = booleanSetting(config, "respawn-reminder");
+        boolean allowCompass = booleanSetting(config, "allow-compass");
         if (!(config.get("messages") instanceof Map<?, ?> configuredMessages)) {
             throw new IllegalArgumentException("messages must be a YAML section");
         }
@@ -81,7 +93,8 @@ final class Settings {
                 Placeholder.unparsed("value", ""), Placeholder.unparsed("command", ""),
                 Placeholder.component("world_part", Component.empty()),
                 Placeholder.component("time_part", Component.empty()),
-                Placeholder.component("ago", Component.empty()));
+                Placeholder.component("ago", Component.empty()),
+                Placeholder.component("location", Component.empty()));
         Map<String, String> messages = new HashMap<>();
         for (Object name : defaultMessages.keySet()) {
             String key = (String) name;
@@ -95,7 +108,8 @@ final class Settings {
             }
             messages.put(key, template);
         }
-        return new Settings(precision, showWorld, showTime, allowClear, messages);
+        return new Settings(precision, showWorld, showTime, allowClear,
+                clickableCoordinates, respawnReminder, allowCompass, messages);
     }
 
     private static boolean booleanSetting(Map<?, ?> config, String key) {
@@ -107,6 +121,14 @@ final class Settings {
 
     boolean allowClear() {
         return allowClear;
+    }
+
+    boolean respawnReminder() { return respawnReminder; }
+
+    boolean allowCompass() { return allowCompass; }
+
+    Component respawnMessage(DeathLocation death, long now) {
+        return message("respawn-reminder", Placeholder.component("location", coordinates(death, now)));
     }
 
     Component message(String key, TagResolver... placeholders) {
@@ -139,8 +161,14 @@ final class Settings {
         Component age = message(unit, Placeholder.unparsed("value", Long.toString(value)));
         Component timePart = showTime ? message("time", values, Placeholder.component("ago", age))
                 : Component.empty();
-        return message("last-death", values, Placeholder.component("world_part", worldPart),
+        Component result = message("last-death", values, Placeholder.component("world_part", worldPart),
                 Placeholder.component("time_part", timePart), Placeholder.component("ago", age));
+        if (clickableCoordinates) {
+            String copied = coordinate(death.x()) + " " + coordinate(death.y()) + " " + coordinate(death.z());
+            result = result.clickEvent(ClickEvent.copyToClipboard(copied))
+                    .hoverEvent(HoverEvent.showText(message("copy-hover")));
+        }
+        return result;
     }
 
     private String coordinate(double value) {
