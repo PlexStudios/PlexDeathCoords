@@ -7,7 +7,7 @@ commands:
   lastdeath:
     description: Show or clear your most recent death location.
     aliases: [deathcoords]
-    usage: /<command> [clear]
+    usage: /<command> [clear|compass]
   plexdeathcoords:
     description: Reload PlexDeathCoords configuration.
     usage: /<command> reload
