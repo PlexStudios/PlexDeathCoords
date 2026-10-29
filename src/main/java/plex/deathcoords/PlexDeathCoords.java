@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.IllegalPluginAccessException;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
@@ -101,6 +102,19 @@ public final class PlexDeathCoords extends JavaPlugin implements Listener {
         World world = player.getWorld();
         store.put(player.getUniqueId(), new DeathLocation(world.getUID(), world.getName(),
                 location.getX(), location.getY(), location.getZ(), System.currentTimeMillis()));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onRespawn(PlayerRespawnEvent event) {
+        if (!settings.respawnReminder()) return;
+        Player player = event.getPlayer();
+        DeathLocation death = store.get(player.getUniqueId());
+        if (death == null) return;
+        getServer().getScheduler().runTask(this, () -> {
+            if (player.isOnline() && settings.respawnReminder()) {
+                player.sendMessage(settings.respawnMessage(death, System.currentTimeMillis()));
+            }
+        });
     }
 
     @Override
