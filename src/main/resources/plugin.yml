@@ -5,9 +5,9 @@ api-version: '1.21'
 description: Records each player's most recent death location.
 commands:
   lastdeath:
-    description: Show or clear your most recent death location.
+    description: Show, clear, or track your most recent death location.
     aliases: [deathcoords]
-    usage: /<command> [clear]
+    usage: /<command> [clear|compass]
   plexdeathcoords:
     description: Reload PlexDeathCoords configuration.
     usage: /<command> reload
@@ -21,3 +21,6 @@ permissions:
   plexdeathcoords.admin:
     description: Reload PlexDeathCoords configuration.
     default: op
+  plexdeathcoords.compass:
+    description: Point a held compass towards your most recent death location.
+    default: true

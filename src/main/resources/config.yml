@@ -3,10 +3,24 @@ coordinate-precision: 0
 show-world: true
 show-time: true
 allow-clear: true
+clickable-coordinates: true
+# Chat reminder after a death respawn; requires plexdeathcoords.use.
+respawn-reminder: false
+# Requires an existing regular compass in the main hand and the same loaded world.
+allow-compass: true
 
 # MiniMessage formatting. Dynamic values are inserted as plain text.
+# <coordinates> is one clickable triple; legacy <x>, <y>, <z> remain supported.
 messages:
-  last-death: '<gray>Last death: <white><x>, <y>, <z></white><world_part><time_part></gray>'
+  last-death: '<gray>Last death: <white><coordinates></white><world_part><time_part></gray>'
+  copy-hover: '<gray>Click to copy coordinates</gray>'
+  respawn-reminder: '<gray>Your last death: <white><coordinates></white><world_part><time_part></gray>'
+  compass-enabled: '<gray>Your held compass now points to <white><coordinates></white><world_part>.</gray>'
+  compass-disabled: '<red>Death compass tracking is disabled.</red>'
+  compass-held: '<red>Hold a regular compass in your main hand first.</red>'
+  compass-world-unavailable: '<red>The world of your last death is not loaded.</red>'
+  compass-different-world: '<red>Travel to the world of your last death before tracking it.</red>'
+  compass-failed: '<red>Your held compass could not be updated.</red>'
   world: ' in <white><world></white>'
   time: ' <dark_gray>(<ago> ago)</dark_gray>'
   seconds: '<value>s'
@@ -18,7 +32,7 @@ messages:
   clear-disabled: '<red>Clearing death locations is disabled.</red>'
   no-permission: '<red>You do not have permission to use this command.</red>'
   players-only: '<red>Only players can use this command.</red>'
-  usage: '<gray>Usage: /<command> [clear]</gray>'
+  usage: '<gray>Usage: /<command> [clear|compass]</gray>'
   admin-usage: '<gray>Usage: /<command> reload</gray>'
   reloaded: '<gray>Configuration reloaded.</gray>'
   reload-in-progress: '<gray>Configuration reload is already in progress.</gray>'

@@ -41,6 +41,7 @@ public final class PlexDeathCoords extends JavaPlugin implements Listener {
                 command.setTabCompleter(handler);
             }
             getServer().getPluginManager().registerEvents(this, this);
+            getServer().getPluginManager().registerEvents(new DeathReminders(store, () -> settings), this);
         } catch (IOException | RuntimeException exception) {
             getLogger().log(Level.SEVERE, "Could not enable PlexDeathCoords; existing death data is untouched.", exception);
             getServer().getPluginManager().disablePlugin(this);

@@ -11,6 +11,9 @@ Maintained by [ApplexDev](https://github.com/ApplexDev) / Plex Studios.
 - World UUID/name, exact coordinates, and death timestamp stored in `deaths.yml`.
 - Commands to view or clear a location, with permission checks and tab completion.
 - Configurable MiniMessage responses, coordinate precision, world display, and elapsed time.
+- Clickable coordinates that copy the displayed triple, with customizable hover text.
+- Optional chat reminder after a death respawn, disabled by default.
+- Point an existing held compass at the latest death, without ticking tasks.
 - Background storage writes, retries after failed saves, and a final flush on normal shutdown.
 - Configuration reload without restarting the server; cancelled deaths are ignored.
 - No additional plugin dependencies or bundled runtime libraries.
@@ -26,7 +29,7 @@ Maintained by [ApplexDev](https://github.com/ApplexDev) / Plex Studios.
 
 ## Installation
 
-1. Build `PlexDeathCoords-1.0.0.jar` from source, or download it from [GitHub Releases](https://github.com/PlexStudios/PlexDeathCoords/releases) when a release is available.
+1. Build `PlexDeathCoords-1.1.0.jar` from source, or download it from [GitHub Releases](https://github.com/PlexStudios/PlexDeathCoords/releases) when a release is available.
 2. Place the JAR in your Paper server's `plugins` directory.
 3. Start or restart the server.
 4. Edit `plugins/PlexDeathCoords/config.yml` if needed and run `/plexdeathcoords reload`.
@@ -42,11 +45,24 @@ death locations are not imported. Use a full server restart when replacing the J
 | `/deathcoords` | `plexdeathcoords.use` | Everyone |
 | `/lastdeath clear` | `plexdeathcoords.use` and `plexdeathcoords.clear` | Everyone |
 | `/deathcoords clear` | `plexdeathcoords.use` and `plexdeathcoords.clear` | Everyone |
+| `/lastdeath compass`, `/deathcoords compass` | `plexdeathcoords.use` and `plexdeathcoords.compass` | Everyone |
 | `/plexdeathcoords reload` | `plexdeathcoords.admin` | Operators |
 
 Viewing and clearing require a player. The console can reload configuration.
 Death tracking does not depend on command permissions. Clear suggestions disappear
 when clearing is disabled or the player lacks permission.
+
+Hold a regular compass in your main hand and run `/lastdeath compass` in the
+same world as your saved death. The command updates that item's lodestone target;
+it does not give items, change your spawn, load worlds, or run background tracking.
+An actual lodestone block is not required. This works through the same API in the
+Overworld, Nether, and End. Recovery compasses are not supported. The target is a
+block position using Minecraft's block-coordinate conversion, independent of chat
+precision. Existing compass metadata is retained except for its previous target
+and lodestone-validation flag. A stack of held compasses receives the same target.
+The target remains fixed until you run the command again, including after another
+death or clearing your saved death. Compasses do not point across dimensions;
+return to the target world to use them.
 
 ## Configuration
 
@@ -58,9 +74,14 @@ coordinate-precision: 0
 show-world: true
 show-time: true
 allow-clear: true
+clickable-coordinates: true
+respawn-reminder: false
+allow-compass: true
 
 messages:
-  last-death: '<gray>Last death: <white><x>, <y>, <z></white><world_part><time_part></gray>'
+  last-death: '<gray>Last death: <white><coordinates></white><world_part><time_part></gray>'
+  copy-hover: '<gray>Click to copy coordinates</gray>'
+  respawn-reminder: '<gray>Your last death: <white><coordinates></white><world_part><time_part></gray>'
 ```
 
 Missing options and messages use bundled defaults. Precision accepts integers from
@@ -71,6 +92,19 @@ The world/time toggles control `<world_part>` and `<time_part>`. Keep those
 placeholders in `last-death` for the toggles to apply. `allow-clear: false` blocks
 clearing even when the player has the clear permission.
 
+`clickable-coordinates` enables a clipboard action on the coordinate portion.
+`<coordinates>` displays and copies the full formatted `x, y, z` triple. Existing
+templates using `<x>`, `<y>`, and `<z>` keep their formatting; clicking any of these
+values also copies the full triple. World and time sections have no clipboard action.
+The clipboard action requires a Minecraft client that supports it and permits it.
+
+`respawn-reminder` sends one message after a death respawn to players with
+`plexdeathcoords.use` and a saved death. End-portal returns do not send reminders.
+It uses the same precision, clickable coordinates, and world/time toggles as the
+command. `allow-compass` controls the compass command. Both commands and reminders
+use the current settings after reload. No configuration migration is needed:
+missing new options/messages use defaults in memory; existing files are not rewritten.
+
 Messages use [MiniMessage formatting](https://docs.papermc.io/adventure/minimessage/format/).
 Close formatting tags explicitly; strict parsing rejects unclosed tags and
 `<reset>`. Dynamic world names, coordinates, and command labels are inserted as
@@ -78,14 +112,17 @@ plain text. Empty message strings are allowed.
 
 | Message | Placeholders |
 | --- | --- |
-| `last-death` | `<x>`, `<y>`, `<z>`, `<world>`, `<world_part>`, `<time_part>`, `<ago>` |
-| `world` | `<world>`, `<x>`, `<y>`, `<z>` |
-| `time` | `<ago>`, `<world>`, `<x>`, `<y>`, `<z>` |
+| `last-death`, `respawn-reminder`, `compass-enabled` | `<coordinates>`, `<x>`, `<y>`, `<z>`, `<world>`, `<world_part>`, `<time_part>`, `<ago>` |
+| `copy-hover`, `world` | `<world>`, `<coordinates>`, `<x>`, `<y>`, `<z>` |
+| `time` | `<ago>`, `<world>`, `<coordinates>`, `<x>`, `<y>`, `<z>` |
 | `seconds`, `minutes`, `hours`, `days` | `<value>` |
 | `usage`, `admin-usage` | `<command>` |
 
 Elapsed time uses the largest whole unit: seconds, minutes, hours, or days.
 World display uses the name saved at death, so an unloaded world can still be shown.
+Compass feedback is customizable with `compass-enabled`, `compass-disabled`,
+`compass-held`, `compass-world-unavailable`, `compass-different-world`, and
+`compass-failed`. The existing `no-death` and `no-permission` messages also apply.
 
 Reload reads and validates configuration in the background, then applies it on
 the server thread. Invalid reloads retain working settings. Duplicate YAML keys,
@@ -128,10 +165,13 @@ Windows PowerShell:
 .\gradlew.bat clean build
 ```
 
-The output is `build/libs/PlexDeathCoords-1.0.0.jar`. The build compiles the plugin
-and packages its configuration, metadata, and license. This public source copy
-contains production sources and build tooling. Paper, Adventure, SnakeYAML, and
-JUnit are not bundled in the plugin JAR.
+The output is `build/libs/PlexDeathCoords-1.1.0.jar`. The build runs the automated
+tests; run them separately with `sh gradlew test` or `.\gradlew.bat test`.
+Paper, Adventure, SnakeYAML, and JUnit are not bundled in the plugin JAR.
+
+Tests cover persistence, latest-record replacement, invalid input, storage
+recovery, configuration, formatting, commands, permissions, and metadata.
+See [RELEASE_NOTES.md](RELEASE_NOTES.md) for validation results and remaining live-server checks.
 
 ## Troubleshooting
 
@@ -151,11 +191,11 @@ Report bugs or propose changes through [GitHub Issues](https://github.com/PlexSt
 Include the plugin, Paper/Minecraft, and Java versions, reproduction steps, and
 relevant logs with credentials and private player information removed.
 
-When opening a pull request, keep changes
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Keep changes
 focused on death-location tracking, retrieval, and reliability.
 
 ## License
 
 [MIT](LICENSE), copyright Plex Studios. The license is included in the repository
 and release JAR. Third-party tooling and dependencies retain their own licenses;
-the Gradle wrapper retains its [Apache 2.0 license](gradle/wrapper/LICENSE).
+see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

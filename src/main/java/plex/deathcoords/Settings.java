@@ -1,6 +1,8 @@
 package plex.deathcoords;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.ParsingException;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -27,14 +29,21 @@ final class Settings {
     private final boolean showWorld;
     private final boolean showTime;
     private final boolean allowClear;
+    private final boolean clickableCoordinates;
+    private final boolean respawnReminder;
+    private final boolean allowCompass;
     private final Map<String, String> messages;
 
     private Settings(int precision, boolean showWorld, boolean showTime, boolean allowClear,
+                     boolean clickableCoordinates, boolean respawnReminder, boolean allowCompass,
                      Map<String, String> messages) {
         this.precision = precision;
         this.showWorld = showWorld;
         this.showTime = showTime;
         this.allowClear = allowClear;
+        this.clickableCoordinates = clickableCoordinates;
+        this.respawnReminder = respawnReminder;
+        this.allowCompass = allowCompass;
         this.messages = Map.copyOf(messages);
     }
 
@@ -67,6 +76,9 @@ final class Settings {
         boolean showWorld = booleanSetting(config, "show-world");
         boolean showTime = booleanSetting(config, "show-time");
         boolean allowClear = booleanSetting(config, "allow-clear");
+        boolean clickableCoordinates = booleanSetting(config, "clickable-coordinates");
+        boolean respawnReminder = booleanSetting(config, "respawn-reminder");
+        boolean allowCompass = booleanSetting(config, "allow-compass");
         if (!(config.get("messages") instanceof Map<?, ?> configuredMessages)) {
             throw new IllegalArgumentException("messages must be a YAML section");
         }
@@ -81,6 +93,7 @@ final class Settings {
                 Placeholder.unparsed("value", ""), Placeholder.unparsed("command", ""),
                 Placeholder.component("world_part", Component.empty()),
                 Placeholder.component("time_part", Component.empty()),
+                Placeholder.component("coordinates", Component.empty()),
                 Placeholder.component("ago", Component.empty()));
         Map<String, String> messages = new HashMap<>();
         for (Object name : defaultMessages.keySet()) {
@@ -95,7 +108,8 @@ final class Settings {
             }
             messages.put(key, template);
         }
-        return new Settings(precision, showWorld, showTime, allowClear, messages);
+        return new Settings(precision, showWorld, showTime, allowClear,
+                clickableCoordinates, respawnReminder, allowCompass, messages);
     }
 
     private static boolean booleanSetting(Map<?, ?> config, String key) {
@@ -109,16 +123,38 @@ final class Settings {
         return allowClear;
     }
 
+    boolean respawnReminder() {
+        return respawnReminder;
+    }
+
+    boolean allowCompass() {
+        return allowCompass;
+    }
+
     Component message(String key, TagResolver... placeholders) {
         return MINI_MESSAGE.deserialize(messages.get(key), placeholders);
     }
 
     Component coordinates(DeathLocation death, long now) {
+        return coordinates("last-death", death, now);
+    }
+
+    Component coordinates(String key, DeathLocation death, long now) {
+        String x = coordinate(death.x());
+        String y = coordinate(death.y());
+        String z = coordinate(death.z());
+        String copied = x + ", " + y + ", " + z;
         TagResolver values = TagResolver.resolver(
                 Placeholder.unparsed("world", death.worldName()),
-                Placeholder.unparsed("x", coordinate(death.x())),
-                Placeholder.unparsed("y", coordinate(death.y())),
-                Placeholder.unparsed("z", coordinate(death.z())));
+                Placeholder.unparsed("x", x), Placeholder.unparsed("y", y),
+                Placeholder.unparsed("z", z), Placeholder.unparsed("coordinates", copied));
+        HoverEvent<Component> hover = HoverEvent.showText(message("copy-hover", values));
+        TagResolver displayed = TagResolver.resolver(
+                Placeholder.component("coordinates", clickable(copied, copied, hover)),
+                Placeholder.component("x", clickable(x, copied, hover)),
+                Placeholder.component("y", clickable(y, copied, hover)),
+                Placeholder.component("z", clickable(z, copied, hover)),
+                Placeholder.unparsed("world", death.worldName()));
         Component worldPart = showWorld ? message("world", values) : Component.empty();
         long seconds = Math.max(0, now - death.timestamp()) / 1000;
         String unit;
@@ -139,8 +175,14 @@ final class Settings {
         Component age = message(unit, Placeholder.unparsed("value", Long.toString(value)));
         Component timePart = showTime ? message("time", values, Placeholder.component("ago", age))
                 : Component.empty();
-        return message("last-death", values, Placeholder.component("world_part", worldPart),
+        return message(key, displayed, Placeholder.component("world_part", worldPart),
                 Placeholder.component("time_part", timePart), Placeholder.component("ago", age));
+    }
+
+    private Component clickable(String text, String copied, HoverEvent<Component> hover) {
+        Component component = Component.text(text);
+        return clickableCoordinates ? component.clickEvent(ClickEvent.copyToClipboard(copied)).hoverEvent(hover)
+                : component;
     }
 
     private String coordinate(double value) {
