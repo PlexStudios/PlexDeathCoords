@@ -29,7 +29,7 @@ Maintained by [ApplexDev](https://github.com/ApplexDev) / Plex Studios.
 
 ## Installation
 
-1. Build `PlexDeathCoords-1.1.0.jar` from source, or download it from [GitHub Releases](https://github.com/PlexStudios/PlexDeathCoords/releases) when a release is available.
+1. To use the current source version (1.1.0), build `PlexDeathCoords-1.1.0.jar` from source. Alternatively, download an officially published version from [Hangar](https://hangar.papermc.io/PlexStudios/PlexDeathCoords). Check the version on the download page before installing; published versions may differ from the source version.
 2. Place the JAR in your Paper server's `plugins` directory.
 3. Start or restart the server.
 4. Edit `plugins/PlexDeathCoords/config.yml` if needed and run `/plexdeathcoords reload`.
